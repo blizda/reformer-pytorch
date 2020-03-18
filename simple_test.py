@@ -43,7 +43,7 @@ model = ReformerLM(
 model.train()
 model.to(devices)
 print("starting test")
-inputs = torch.randint(low=0, high=tokenizer.vocab_size - 1, size=(2, 3))
+inputs = torch.randint(low=0, high=tokenizer.vocab_size - 1, size=(10, tokenizer.max_len))
 output = model(inputs)
 print(output)
 print("test pass")
