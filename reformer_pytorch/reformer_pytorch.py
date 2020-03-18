@@ -243,7 +243,7 @@ class LSHAttention(nn.Module):
         # attention softmax, but normalizing keys is needed so that similarity for
         # the purposes of attention correctly corresponds to hash locality.
         bq = bqk
-        bk = F.normalize(bqk, p=2, dim=-1).type(bq.type())
+        bk = F.normalize(bqk, p=2, dim=-1).to(bq)
 
         # Allow each chunk to attend within itself, and also one chunk back. Chunk
         # boundaries might occur in the middle of a sequence of items from the
@@ -333,7 +333,7 @@ class LSHAttention(nn.Module):
 
         # Softmax.
         dots_logsumexp = torch.logsumexp(dots, dim=-1, keepdim=True)
-        dots = torch.exp(dots - dots_logsumexp).type(dots.type())
+        dots = torch.exp(dots - dots_logsumexp).to(dots)
         dropped_dots = self.dropout(dots)
 
         bo = torch.einsum('buij,buje->buie', dropped_dots, bv)
@@ -395,7 +395,7 @@ class FullQKAttention(nn.Module):
         t = query_len
 
         q = qk[:, 0:query_len]
-        qk = F.normalize(qk, 2, dim=-1).type(q.type())
+        qk = F.normalize(qk, 2, dim=-1).to(q)
 
         dot = torch.einsum('bie,bje->bij', q, qk) * (dim ** -0.5)
 
@@ -552,7 +552,7 @@ class FixedPositionalEmbedding(nn.Module):
         self.register_buffer('inv_freq', inv_freq)
 
     def forward(self, x):
-        t = torch.arange(x.shape[1], device=x.device).type(self.inv_freq.type())
+        t = torch.arange(x.shape[1], device=x.device).to(self.inv_freq)
         sinusoid_inp = torch.einsum("i,j->ij", t, self.inv_freq)
         emb = torch.cat((sinusoid_inp.sin(), sinusoid_inp.cos()), dim=-1)
         return emb[None, :, :]
@@ -665,7 +665,7 @@ class ReformerLM(nn.Module):
 
     def forward(self, x, **kwargs):
         x = self.token_emb(x)
-        x = x + self.pos_emb(x).type(x.type())
+        x = x + self.pos_emb(x).to(x)
 
         x = self.to_model_dim(x)
         x = self.reformer(x, **kwargs)
